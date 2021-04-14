@@ -8,6 +8,7 @@ import argparse
 from dispatcher import Dispatcher
 import pg_simple
 from jinjasql import JinjaSql
+import statistics
 
 QUEUES = {}
 RESULT_QUEUE = multiprocessing.Queue()
@@ -30,7 +31,6 @@ def process_tasks(task_queue):
     while not task_queue.empty():
         host_params = task_queue.get()
         time_taken = query(host_params[0], host_params[1], host_params[2])
-        print(time_taken)
         RESULT_QUEUE.put(time_taken)
     return True
 
@@ -88,33 +88,41 @@ if __name__ == "__main__":
         QUEUES[worker_queue] = multiprocessing.Queue()
 
     # Will pick queue to send task
-    dispatcher = Dispatcher(worker_queues)
-    
-    processes = []
-
-    # Start our processes to be ready to pick up tasks as they publish to queue
-    for worker_queue in worker_queues:
-        p = multiprocessing.Process(target=process_tasks, args=(QUEUES.get(worker_queue),))
-        processes.append(p)
-        p.start()
-
+    dispatcher = Dispatcher(worker_queues)  
     try:
-        with open('query_params.csv') as csv_file:
+        with open('../data/query_params.csv') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
             for row in csv_reader:
                 if line_count == 0:
                     line_count += 1
                 else:
-                    # Select worker responsible for host
+                    # Select worker responsible for current host
                     worker =  dispatcher.select_worker(row[0])
                     queue = QUEUES.get(worker)
                     queue.put(row)
     except Exception as e:
         print(e)
     
+    processes = []
+    # Start our processes to be ready to pick up tasks from the queue
+    for worker_queue in worker_queues:
+        p = multiprocessing.Process(target=process_tasks, args=(QUEUES.get(worker_queue),))
+        processes.append(p)
+        p.start()
+
     for p in processes:
         p.join()
 
+    query_times = []
     no_of_tasks_run = RESULT_QUEUE.qsize()
-    print(no_of_tasks_run)
+    while not RESULT_QUEUE.empty():
+        query_times.append(RESULT_QUEUE.get())
+    
+    # Print out statistics we could obtain
+    print('Total no of queries run:', no_of_tasks_run)
+    print(f'Total Processing time across all queries is: {sum(query_times)} seconds')
+    print(f'Minimum query time is :  { min(query_times)} seconds')
+    print(f'Median query time is: { statistics.median(query_times)} seconds')
+    print(f'Average query time is: { statistics.mean(query_times)} seconds')
+    print(f'Maximum query time: { max(query_times)} seconds' )
