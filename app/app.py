@@ -76,15 +76,9 @@ if __name__ == "__main__":
         type=int,
         help='No of concurrent workers to run'
     )
-    # parser.add_argument(
-    #     'File',
-    #     metavar='file',
-    #     type=str,
-    #     help='File to analyze'
-    # )    
+      
     args = parser.parse_args()
     no_of_workers = args.Concurrency
-    # csv = args.File
 
     # Define the queues our application will utilize
     worker_queues = ["queue_" + str(x) for x in range(1, no_of_workers + 1)]
@@ -98,7 +92,7 @@ if __name__ == "__main__":
     
     processes = []
 
-    # Start our processes to be ready to pick up tasks as we publish to queue
+    # Start our processes to be ready to pick up tasks as they publish to queue
     for worker_queue in worker_queues:
         p = multiprocessing.Process(target=process_tasks, args=(QUEUES.get(worker_queue),))
         processes.append(p)
@@ -112,6 +106,7 @@ if __name__ == "__main__":
                 if line_count == 0:
                     line_count += 1
                 else:
+                    # Select worker responsible for host
                     worker =  dispatcher.select_worker(row[0])
                     queue = QUEUES.get(worker)
                     queue.put(row)
