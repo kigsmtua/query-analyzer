@@ -5,10 +5,11 @@ import time
 import os
 import sys
 import argparse
-from dispatcher import Dispatcher
 import pg_simple
-from jinjasql import JinjaSql
 import statistics
+import statistics
+from   dispatcher import Dispatcher
+from   jinjasql import JinjaSql
 
 QUEUES = {}
 RESULT_QUEUE = multiprocessing.Queue()
@@ -26,13 +27,6 @@ CONNECTION_POOL = pg_simple.config_pool(
     pool_manager=pg_simple.pool.ThreadedConnectionPool,
     password=ENV('DATABASE_PASSWORD')
 )
-
-def process_tasks(task_queue):
-    while not task_queue.empty():
-        host_params = task_queue.get()
-        time_taken = query(host_params[0], host_params[1], host_params[2])
-        RESULT_QUEUE.put(time_taken)
-    return True
 
 def buildquery (host, start_time, end_time):
     template = '''
@@ -64,6 +58,13 @@ def query(host, start_time, end_time):
     return time.time() - start
 
 
+def process_tasks(task_queue):
+    while not task_queue.empty():
+        host_params = task_queue.get()
+        time_taken = query(host_params[0], host_params[1], host_params[2])
+        RESULT_QUEUE.put(time_taken)
+    return True
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Query Analyzer',
@@ -75,8 +76,7 @@ if __name__ == "__main__":
         metavar='concurrency',
         type=int,
         help='No of concurrent workers to run'
-    )
-      
+    )    
     args = parser.parse_args()
     no_of_workers = args.Concurrency
 
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                     queue = QUEUES.get(worker)
                     queue.put(row)
     except Exception as e:
-        print(e)
+        print(str(e))
     
     processes = []
     # Start our processes to be ready to pick up tasks from the queue
@@ -114,6 +114,7 @@ if __name__ == "__main__":
     for p in processes:
         p.join()
 
+    # Run statistics for the processing
     query_times = []
     no_of_tasks_run = RESULT_QUEUE.qsize()
     while not RESULT_QUEUE.empty():
