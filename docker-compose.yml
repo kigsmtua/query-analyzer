@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  db:
+    image: timescale/timescaledb:2.1.1-pg13
+    environment:
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5433:5432
+  app:
+    build:
+      context: .
+    links:
+      - db
+    volumes:
+      - ./:/usr/src/app 
+    depends_on:
+      - db
+    environment:
+      - DATABASE_HOST=db
+      - DATABASE_USERNAME=postgres
+      - DATABASE_NAME=homework
+      - DATABASE_PASSWORD=password
