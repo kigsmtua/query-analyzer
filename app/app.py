@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # Will pick queue to send task
     dispatcher = Dispatcher(worker_queues)  
     try:
-        with open('../data/query_params.csv') as csv_file:
+        with open('data/query_params.csv') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
             for row in csv_reader:

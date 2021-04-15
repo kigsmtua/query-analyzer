@@ -6,6 +6,8 @@ services:
       - POSTGRES_PASSWORD=password
     ports:
       - 5433:5432
+    networks: 
+      - dbconnectwork
   app:
     build:
       context: .
@@ -17,6 +19,13 @@ services:
       - db
     environment:
       - DATABASE_HOST=db
-      - DATABASE_USERNAME=postgres
+      - DATABASE_USER=postgres
       - DATABASE_NAME=homework
       - DATABASE_PASSWORD=password
+      - DATABASE_PORT=5432
+    networks:
+      - dbconnectwork
+
+networks:
+    dbconnectwork:
+        driver: bridge
