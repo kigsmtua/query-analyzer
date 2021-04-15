@@ -86,6 +86,22 @@ docker-compose run app cli 10
 This should run the analysis of the default dataset. Which is in the data folder
 
 
+If you want to specify a custom dataset of query params to run against the analyzer, please run the following
+
+```
+docker-compose run -v {relative_path_to file}:/usr/app/data/{file_name} app cli 10 file_name
+```
+
+example:
+```
+docker-compose run -v /home/kiragu/Projects/python/tscale/app/query_params_2.csv:/usr/src/app/data/query_params_2.csv app cli 10 query_params_2.csv
+
+```
+
+We mount the file to run onto the container and run the app container, specifying we want to run the cli tool with 10 concurrent workers for the file name we specified
+
+**N.B** The path to the file has to be the absolute path to the file not a relative path
+
 2. Running test
 
 We can run tests by running the following command

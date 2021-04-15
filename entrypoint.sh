@@ -5,7 +5,8 @@ command=$1
 case $command in
 
   cli)
-    python3 app/app.py $2
+    shift
+    python3 app/app.py "$@"
     ;;
 
   test)

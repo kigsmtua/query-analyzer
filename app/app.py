@@ -77,12 +77,21 @@ if __name__ == "__main__":
         type=int,
         help='No of concurrent workers to run'
     )    
+
+    parser.add_argument(
+        'File',
+        metavar='file',
+        type=str,
+        nargs='?',
+        default='query_params.csv',
+        help='No of concurrent workers to run'
+    )
+
     args = parser.parse_args()
     no_of_workers = args.Concurrency
-
+    query_arguments_file = "data/"+args.File
     # Define the queues our application will utilize
     worker_queues = ["queue_" + str(x) for x in range(1, no_of_workers + 1)]
-
     # Instantiate the queues as a multiprocessing.Queue()
     for worker_queue in worker_queues:
         QUEUES[worker_queue] = multiprocessing.Queue()
@@ -90,10 +99,12 @@ if __name__ == "__main__":
     # Will pick queue to send task
     dispatcher = Dispatcher(worker_queues)  
     try:
-        with open('data/query_params.csv') as csv_file:
+        with open(query_arguments_file) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=',')
             line_count = 0
             for row in csv_reader:
+                if len(row)!=3 :
+                    exit("Pleases specify the correct format")
                 if line_count == 0:
                     line_count += 1
                 else:
